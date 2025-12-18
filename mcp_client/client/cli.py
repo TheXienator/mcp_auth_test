@@ -18,7 +18,7 @@ class MCPClientCLI:
         self.settings = get_settings()
         self.console = Console()
         self.mcp_client = MCPClient(self.settings.MCP_SERVER_URI)
-        self.mock_claude: Optional[MockClaude] = None
+        self.mock_claude = MockClaude([])  # Start with empty tools
         self.authenticated = False
 
     def display_welcome(self):
@@ -106,45 +106,10 @@ class MCPClientCLI:
 
         return True
 
-    async def attempt_unauthenticated_call(self, user_message: str) -> bool:
-        """
-        Try to call tool without authentication to demonstrate 401 response
-        Returns True if auth is needed, False if call succeeded
-        """
-        self.console.print(
-            "[dim]Attempting to call MCP tool without authentication...[/dim]"
-        )
-
-        try:
-            # Try to list tools without token
-            await self.mcp_client.list_tools(access_token=None)
-            return False  # Succeeded without auth
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code in (401, 403):
-                self.console.print(
-                    f"[yellow]Authentication required (HTTP {e.response.status_code})[/yellow]"
-                )
-                self.console.print()
-                return True  # Auth needed
-            else:
-                raise  # Other error, re-raise
-
     async def handle_user_message(self, user_message: str):
         """Process user message and execute appropriate tool"""
-        # If not authenticated, try unauthenticated call first to demo flow
-        if not self.authenticated:
-            needs_auth = await self.attempt_unauthenticated_call(user_message)
-            if needs_auth:
-                success = await self.perform_oauth_flow()
-                if not success:
-                    return
 
-        # At this point we should be authenticated
-        if not self.authenticated or not self.mock_claude:
-            self.console.print("[red]Error: Not authenticated[/red]")
-            return
-
-        # Mock Claude analyzes intent
+        # Mock Claude analyzes intent (works with empty tools - uses pattern matching)
         analysis = self.mock_claude.analyze_intent(user_message)
 
         # Check if this is a message response instead of a tool call
@@ -180,18 +145,24 @@ class MCPClientCLI:
         self.console.print(analysis_panel)
         self.console.print()
 
-        # Call the tool
+        # Call tool (handles auth automatically)
+        await self.call_tool(analysis['tool_name'], analysis['arguments'])
+
+    async def call_tool(self, tool_name: str, arguments: dict):
+        """Call tool with automatic auth handling
+
+        This method:
+        - Uses saved auth token if available
+        - Calls tool without auth if no token
+        - On 401/403, triggers OAuth flow and retries
+        """
         try:
+            # Get token if available (could be None)
             access_token = self.mcp_client.get_access_token()
-            if not access_token:
-                self.console.print("[yellow]Token expired, re-authenticating...[/yellow]")
-                self.authenticated = False
-                await self.handle_user_message(user_message)  # Retry
-                return
 
             result = await self.mcp_client.call_tool(
-                analysis['tool_name'],
-                analysis['arguments'],
+                tool_name,
+                arguments,
                 access_token
             )
 
@@ -207,9 +178,19 @@ class MCPClientCLI:
 
         except httpx.HTTPStatusError as e:
             if e.response.status_code in (401, 403):
-                self.console.print("[yellow]Token expired, re-authenticating...[/yellow]")
-                self.authenticated = False
-                await self.handle_user_message(user_message)  # Retry
+                # Authentication required - trigger OAuth flow
+                self.console.print("[yellow]Authentication required for tool access[/yellow]")
+                self.console.print()
+
+                success = await self.perform_oauth_flow()
+                if success:
+                    # Tools are now fetched and cached, retry the tool call
+                    self.console.print("[dim]Retrying tool call...[/dim]")
+                    self.console.print()
+                    # Recursive retry with fresh token
+                    await self.call_tool(tool_name, arguments)
+                else:
+                    self.console.print("[red]Authentication failed, cannot call tool[/red]")
             else:
                 error_panel = Panel(
                     f"[bold red]Tool call failed:[/bold red]\n"
@@ -252,10 +233,7 @@ class MCPClientCLI:
                 self.console.print()
                 await self.handle_user_message(user_input)
 
-            except KeyboardInterrupt:
-                self.console.print("\n\n[cyan]Goodbye! 👋[/cyan]")
-                break
-            except EOFError:
+            except (KeyboardInterrupt, EOFError):
                 self.console.print("\n\n[cyan]Goodbye! 👋[/cyan]")
                 break
 

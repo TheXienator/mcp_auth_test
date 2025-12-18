@@ -90,17 +90,6 @@ class MockClaude:
                 return {"joke": joke_text, "category": category}
             return {"joke": message, "category": "general"}
 
-        elif tool_name == "edit_text":
-            # Try to extract new text after keywords
-            match = re.search(
-                r'(?:edit|update|change|set)\s+(?:the\s+)?text\s+(?:to:\s*)?(.+)',
-                message,
-                re.IGNORECASE
-            )
-            if match:
-                return {"new_text": match.group(1).strip()}
-            return {"new_text": message}
-
         return {}
 
     def _explain_choice(self, tool_name: str, pattern: str, message: str) -> str:
@@ -108,14 +97,5 @@ class MockClaude:
         explanations = {
             "get_joke": "User message matches joke request pattern. Detected keywords suggesting they want a joke.",
             "save_joke": "User message matches save joke pattern. They appear to want to store a new joke.",
-            "list_text": "User message matches text retrieval pattern. They want to see stored text.",
-            "edit_text": "User message matches text editing pattern. They want to update stored text.",
         }
         return explanations.get(tool_name, f"Matched pattern: {pattern}")
-
-    def should_use_tool(self, user_message: str) -> bool:
-        """
-        Determine if message requires a tool call
-        For this demo, we always try to use tools
-        """
-        return True  # Always attempt tool usage for demo purposes
