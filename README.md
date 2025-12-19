@@ -1,97 +1,73 @@
-# MCP Self-Register Auth
+# MCP Authentication Test Project
 
-A test implementation of the Model Context Protocol (MCP) [Authorization specification](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization). This project demonstrates how MCP servers can implement secure authentication flows using OAuth 2.0 Client Credentials grant with self-registration capabilities.
-
-## Overview
-
-This repository is a proof-of-concept testing the MCP authorization specification. It contains:
-- **simple_mcp_server**: An MCP server implementation with OAuth 2.0 authentication
-- **mcp_client**: A client implementation that demonstrates the OAuth flow and MCP tool usage
-
-## Features
-
-- OAuth 2.0 Client Credentials Grant for secure authentication
-- MCP specification compliant (RFC 9728 & RFC 8414)
-- Well-known endpoints for service discovery as per [MCP Authorization spec](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization)
-- JWT-based token authentication
-- File-based persistence
-- Full integration tests
+This project explores the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization) OAuth 2.0 specification with Dynamic Client Registration (DCR).
 
 ## Project Structure
 
 ```
-├── simple_mcp_server/     # MCP server with OAuth 2.0
-│   ├── server/
-│   │   ├── main.py        # FastAPI application
-│   │   ├── oauth/         # OAuth implementation
-│   │   ├── mcp/           # MCP tools
-│   │   ├── well_known/    # Discovery endpoints
-│   │   └── storage/       # Data persistence
-│   └── tests/             # Integration tests
-├── mcp_client/            # Client implementation
-│   └── client/
-│       ├── mcp_client.py  # MCP client
-│       └── oauth_manager.py # OAuth flow handler
-└── README.md
+mcp_auth_test/
+├── greeting_mcp_server/    # MCP server with OAuth 2.0 DCR support
+└── dynamic_mcp_client/     # Web-based MCP client with DCR and OAuth flow
 ```
+
+## What is an MCP Server?
+
+An MCP server provides tools and resources that AI assistants can use through the Model Context Protocol. This project implements an OAuth 2.0 protected MCP server that requires clients to authenticate using Dynamic Client Registration (DCR) before accessing its tools.
 
 ## Quick Start
 
-### Server Setup
+### Prerequisites
+- Python 3.10+
+- [uv](https://github.com/astral-sh/uv) package manager
 
-1. Navigate to the server directory:
+### Running the Server
+
 ```bash
-cd simple_mcp_server
+cd greeting_mcp_server
+uv run main.py
 ```
 
-2. Install dependencies:
+The server will start on `http://localhost:8000` with OAuth 2.0 authentication and a single MCP tool (`say_hello`).
+
+## Verifying Dynamic Client Registration
+
+You can verify that the server supports DCR in a few ways:
+
+### Method 1: Using MCP Inspector
+
 ```bash
-pip3 install -r requirements.txt
+npx @modelcontextprotocol/inspector uv run main.py
 ```
 
-3. Configure `.env` file with your settings
+1. Click "Connect" and complete the OAuth flow
+2. Check `greeting_mcp_server/oauth_clients.json` - you should see a new client entry
 
-4. Start the server:
+### Method 2: Using Claude Desktop
+
 ```bash
-python3 -m uvicorn server.main:app --reload --port 8000
+claude mcp add http://localhost:8000/sse --transport sse
 ```
 
-### Client Usage
+Follow the authentication flow, then verify the new client was registered in `oauth_clients.json`.
 
-1. Navigate to the client directory:
+### Method 3: Using the provided Dynamic MCP Client
+
 ```bash
-cd mcp_client
+cd dynamic_mcp_client
+uv run main.py
 ```
 
-2. Install dependencies:
-```bash
-pip3 install -r requirements.txt
-```
+Open `http://localhost:3000` in your browser. Click "Add Server", enter the server URL (`http://localhost:8000`), then click "Connect" to complete OAuth authorization. The client automatically handles DCR and PKCE.
 
-3. Configure `.env` file
+## What's Included
 
-4. Run the client:
-```bash
-python3 main.py
-```
+The `greeting_mcp_server` implements:
+- **OAuth 2.0 Dynamic Client Registration** (RFC 7591)
+- **Authorization Code Flow** with PKCE support
+- **RS256 JWT** token signing with JWKS discovery
+- **MCP Tool**: `say_hello(name)` - returns a personalized greeting
+- **Persistent client storage** in `oauth_clients.json`
 
-## Documentation
+## Next Steps
 
-See [simple_mcp_server/README.md](simple_mcp_server/__pycache__/README.md) for detailed server documentation including:
-- API endpoints
-- Authentication flow
-- Tool usage examples
-- Security features
-- Testing instructions
-
-## MCP Authorization Specification
-
-This project implements the authorization flow described in the [MCP Authorization specification](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization), including:
-- Resource metadata endpoint (`/.well-known/mcp-resource-metadata.json`)
-- Authorization server metadata endpoint (`/.well-known/oauth-authorization-server`)
-- Token endpoint with client credentials grant
-- Bearer token authentication for protected resources
-
-## License
-
-MIT License
+See [greeting_mcp_server/README.md](greeting_mcp_server/README.md) for technical details and API documentation.

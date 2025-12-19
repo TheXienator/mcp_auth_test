@@ -1,0 +1,558 @@
+{% extends "layout.html" %}
+
+{% block title %}MCP Servers - Dynamic MCP Client{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>MCP Servers</h2>
+    <a href="/add" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-2" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+        </svg>
+        Add Server
+    </a>
+</div>
+
+{% if servers %}
+    <div>
+        {% for server in servers %}
+        <div class="mb-3">
+            <div class="card server-card">
+                <div class="card-header server-card-header d-flex justify-content-between align-items-center" data-server-id="{{ server.id }}" style="cursor: pointer;">
+                    <div class="d-flex align-items-center gap-3">
+                        <h5 class="card-title mb-0">{{ server.name }}</h5>
+                        <p class="card-text text-muted small mb-0">{{ server.server_url }}</p>
+                        {% if server.is_authorized %}
+                            <div class="badge bg-success">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-check-circle me-1" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                    <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                                </svg>
+                                Authorized
+                            </div>
+                            {% if server.last_connected %}
+                            <span class="small text-muted">
+                                Last connected: {{ server.last_connected.strftime('%Y-%m-%d %H:%M') }}
+                            </span>
+                            {% endif %}
+                        {% else %}
+                            <div class="badge bg-warning text-dark">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-exclamation-circle me-1" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                                </svg>
+                                Not Authorized
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <button class="btn btn-sm btn-outline-secondary expand-collapse-btn" data-server-id="{{ server.id }}">
+                            <span class="expand-text">Expand</span>
+                            <span class="collapse-text d-none">Collapse</span>
+                        </button>
+                        {% if server.is_authorized %}
+                        <button class="btn btn-sm btn-outline-primary test-connection-btn" data-server-id="{{ server.id }}" onclick="event.stopPropagation();">
+                            <span class="button-text">Test Connection</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                        {% else %}
+                        <button class="btn btn-sm btn-success connect-server-btn" data-server-id="{{ server.id }}" onclick="event.stopPropagation();">
+                            <span class="button-text">Connect</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-sm btn-outline-danger delete-server-btn" data-server-id="{{ server.id }}" data-server-name="{{ server.name }}" onclick="event.stopPropagation();">Delete</button>
+                    </div>
+                </div>
+                <div class="card-body collapse" id="tools-{{ server.id }}">
+                    <div class="tools-container" data-server-id="{{ server.id }}">
+                        <!-- Tools will be inserted here via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state text-center py-5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-server text-muted mb-3" viewBox="0 0 16 16">
+            <path d="M1.333 2.667C1.333 1.194 4.318 0 8 0s6.667 1.194 6.667 2.667V4c0 1.473-2.985 2.667-6.667 2.667S1.333 5.473 1.333 4V2.667z"/>
+            <path d="M1.333 6.334v3C1.333 10.805 4.318 12 8 12s6.667-1.194 6.667-2.667V6.334a6.51 6.51 0 0 1-1.458.79C11.81 7.684 9.967 8 8 8c-1.966 0-3.809-.317-5.208-.876a6.508 6.508 0 0 1-1.458-.79z"/>
+            <path d="M14.667 11.668a6.51 6.51 0 0 1-1.458.789c-1.4.56-3.242.876-5.21.876-1.966 0-3.809-.316-5.208-.876a6.51 6.51 0 0 1-1.458-.79v1.666C1.333 14.806 4.318 16 8 16s6.667-1.194 6.667-2.667v-1.665z"/>
+        </svg>
+        <h4 class="text-muted">No servers registered yet</h4>
+        <p class="text-muted">Click "Add Server" to get started</p>
+        <a href="/add" class="btn btn-primary mt-3">Add Your First Server</a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Store tool data for all servers
+const serverTools = new Map();
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Pre-fetch tools for all authorized servers
+    preFetchTools();
+
+    // Expand/collapse server cards
+    document.querySelectorAll('.server-card-header').forEach(header => {
+        header.addEventListener('click', function(e) {
+            // Don't toggle if clicking on buttons
+            if (e.target.closest('button')) {
+                return;
+            }
+            const serverId = this.dataset.serverId;
+            toggleServerExpansion(serverId);
+        });
+    });
+
+    // Expand/collapse buttons
+    document.querySelectorAll('.expand-collapse-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const serverId = this.dataset.serverId;
+            toggleServerExpansion(serverId);
+        });
+    });
+
+    // Connect buttons (for unauthorized servers)
+    document.querySelectorAll('.connect-server-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const serverId = this.dataset.serverId;
+            const buttonText = this.querySelector('.button-text');
+            const spinner = this.querySelector('.spinner-border');
+
+            // Show loading state
+            this.disabled = true;
+            buttonText.classList.add('d-none');
+            spinner.classList.remove('d-none');
+
+            try {
+                const response = await fetch(`/add/connect/${serverId}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('✓ Connected successfully!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(`Error: ${data.error}`, 'danger');
+                    // Reset button state on error
+                    this.disabled = false;
+                    buttonText.classList.remove('d-none');
+                    spinner.classList.add('d-none');
+                }
+            } catch (error) {
+                showToast(`Error: ${error.message}`, 'danger');
+                // Reset button state on error
+                this.disabled = false;
+                buttonText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+            }
+        });
+    });
+
+    // Test connection buttons
+    document.querySelectorAll('.test-connection-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const serverId = this.dataset.serverId;
+            const buttonText = this.querySelector('.button-text');
+            const spinner = this.querySelector('.spinner-border');
+
+            // Show loading state
+            this.disabled = true;
+            buttonText.classList.add('d-none');
+            spinner.classList.remove('d-none');
+
+            try {
+                const response = await fetch(`/servers/${serverId}/test`, {
+                    method: 'POST'
+                });
+                
+                // Check if response is OK before parsing
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: ${response.statusText}` }));
+                    showToast(`Error: ${errorData.error || `HTTP ${response.status}`}`, 'danger');
+                    // Reset button state on error
+                    this.disabled = false;
+                    buttonText.classList.remove('d-none');
+                    spinner.classList.add('d-none');
+                    return;
+                }
+                
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`✓ ${data.message}`, 'success');
+                    // Update cached tools
+                    if (data.tools) {
+                        serverTools.set(serverId, {
+                            tools: data.tools,
+                            server_name: data.server_name
+                        });
+                    }
+                    // Reload to update last_connected time
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(`Error: ${data.error}`, 'danger');
+                    // Reset button state on error
+                    this.disabled = false;
+                    buttonText.classList.remove('d-none');
+                    spinner.classList.add('d-none');
+                }
+            } catch (error) {
+                console.error('Test connection error:', error);
+                showToast(`Error: ${error.message}`, 'danger');
+                // Reset button state on error
+                this.disabled = false;
+                buttonText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+            }
+        });
+    });
+
+    // Delete buttons
+    document.querySelectorAll('.delete-server-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const serverId = this.dataset.serverId;
+            const serverName = this.dataset.serverName;
+
+            if (!confirm(`Are you sure you want to delete "${serverName}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/servers/${serverId}/delete`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    showToast(`Error: ${data.error}`, 'danger');
+                }
+            } catch (error) {
+                showToast(`Error: ${error.message}`, 'danger');
+            }
+        });
+    });
+});
+
+// Pre-fetch tools for all authorized servers
+async function preFetchTools() {
+    const authorizedServers = document.querySelectorAll('.server-card-header[data-server-id]');
+    console.log(`Pre-fetching tools for ${authorizedServers.length} servers`);
+    
+    for (const header of authorizedServers) {
+        const serverId = header.dataset.serverId;
+        const badge = header.querySelector('.badge.bg-success');
+        
+        // Only pre-fetch for authorized servers
+        if (badge) {
+            try {
+                console.log(`Pre-fetching tools for server ${serverId}`);
+                const response = await fetch(`/servers/${serverId}/tools`, {
+                    method: 'GET'
+                });
+                
+                // Only process if successful (200-299)
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success && data.tools) {
+                        serverTools.set(serverId, {
+                            tools: data.tools,
+                            server_name: data.server_name
+                        });
+                        console.log(`✓ Pre-fetched ${data.tools.length} tools for server ${serverId}`);
+                    }
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.warn(`Failed to pre-fetch tools for server ${serverId}:`, errorData.error || `HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.warn(`Error pre-fetching tools for server ${serverId}:`, error);
+            }
+        }
+    }
+}
+
+// Toggle server expansion
+function toggleServerExpansion(serverId) {
+    const collapseElement = document.getElementById(`tools-${serverId}`);
+    const expandBtn = document.querySelector(`.expand-collapse-btn[data-server-id="${serverId}"]`);
+    const expandText = expandBtn?.querySelector('.expand-text');
+    const collapseText = expandBtn?.querySelector('.collapse-text');
+    
+    if (!collapseElement) return;
+    
+    // Toggle collapse
+    const bsCollapse = new bootstrap.Collapse(collapseElement, {
+        toggle: true
+    });
+    
+    // Update button text
+    if (expandText && collapseText) {
+        collapseElement.addEventListener('shown.bs.collapse', function() {
+            expandText.classList.add('d-none');
+            collapseText.classList.remove('d-none');
+        }, { once: true });
+        
+        collapseElement.addEventListener('hidden.bs.collapse', function() {
+            expandText.classList.remove('d-none');
+            collapseText.classList.add('d-none');
+        }, { once: true });
+    }
+    
+    // Render tools when expanded
+    collapseElement.addEventListener('shown.bs.collapse', function() {
+        renderTools(serverId);
+    }, { once: true });
+    
+    // If already shown, render immediately
+    if (collapseElement.classList.contains('show')) {
+        renderTools(serverId);
+    }
+}
+
+// Render tools for a server
+function renderTools(serverId) {
+    const toolsContainer = document.querySelector(`.tools-container[data-server-id="${serverId}"]`);
+    if (!toolsContainer) {
+        console.warn(`Tools container not found for server ${serverId}`);
+        return;
+    }
+    
+    // Check if already rendered
+    if (toolsContainer.querySelector('.tool-item')) {
+        console.log(`Tools already rendered for server ${serverId}`);
+        return;
+    }
+    
+    const toolsData = serverTools.get(serverId);
+    console.log(`Rendering tools for server ${serverId}:`, toolsData);
+    
+    if (!toolsData || !toolsData.tools || toolsData.tools.length === 0) {
+        toolsContainer.innerHTML = '<p class="text-muted">No tools available. Click "Test Connection" to refresh.</p>';
+        return;
+    }
+    
+    toolsContainer.innerHTML = '';
+    
+    toolsData.tools.forEach((tool, index) => {
+        const toolItem = document.createElement('div');
+        toolItem.className = 'tool-item mb-3 p-3 border rounded';
+        toolItem.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h6 class="mb-1">${escapeHtml(tool.name)}</h6>
+                    <p class="text-muted small mb-0">${escapeHtml(tool.description || 'No description')}</p>
+                </div>
+                <button class="btn btn-sm btn-primary call-tool-btn" data-server-id="${serverId}" data-tool-name="${escapeHtml(tool.name)}" data-tool-index="${index}">
+                    Call Tool
+                </button>
+            </div>
+            <div class="tool-form-container collapse" id="tool-form-${serverId}-${index}">
+                <!-- Form will be generated here -->
+            </div>
+            <div class="tool-result-container mt-2" id="tool-result-${serverId}-${index}" style="display: none;">
+                <!-- Results will be displayed here -->
+            </div>
+        `;
+        
+        toolsContainer.appendChild(toolItem);
+        
+        // Add click handler for call tool button
+        const callBtn = toolItem.querySelector('.call-tool-btn');
+        callBtn.addEventListener('click', function() {
+            const formContainer = toolItem.querySelector('.tool-form-container');
+            const formId = `tool-form-${serverId}-${index}`;
+            
+            // Toggle form visibility
+            const bsCollapse = new bootstrap.Collapse(formContainer, {
+                toggle: true
+            });
+            
+            // Generate form on first expand
+            if (!formContainer.querySelector('form')) {
+                generateToolForm(tool, formId, serverId, index);
+            }
+        });
+    });
+}
+
+// Generate form from JSON Schema
+function generateToolForm(tool, formId, serverId, toolIndex) {
+    const formContainer = document.getElementById(formId);
+    if (!formContainer) return;
+    
+    const inputSchema = tool.inputSchema || {};
+    const properties = inputSchema.properties || {};
+    const required = inputSchema.required || [];
+    
+    if (Object.keys(properties).length === 0) {
+        formContainer.innerHTML = '<p class="text-muted small">This tool has no parameters.</p>';
+        return;
+    }
+    
+    let formHTML = '<form class="tool-form mt-3">';
+    
+    for (const [propName, propSchema] of Object.entries(properties)) {
+        const isRequired = required.includes(propName);
+        const propType = propSchema.type || 'string';
+        const propDescription = propSchema.description || '';
+        
+        formHTML += '<div class="mb-3">';
+        formHTML += `<label for="${formId}-${propName}" class="form-label">${escapeHtml(propName)}${isRequired ? ' <span class="text-danger">*</span>' : ''}</label>`;
+        
+        if (propDescription) {
+            formHTML += `<small class="form-text text-muted d-block mb-1">${escapeHtml(propDescription)}</small>`;
+        }
+        
+        // Generate input based on type
+        if (propType === 'boolean') {
+            formHTML += `<input type="checkbox" class="form-check-input" id="${formId}-${propName}" name="${propName}" ${isRequired ? 'required' : ''}>`;
+        } else if (propType === 'number' || propType === 'integer') {
+            formHTML += `<input type="number" class="form-control" id="${formId}-${propName}" name="${propName}" ${isRequired ? 'required' : ''} step="${propType === 'integer' ? '1' : 'any'}">`;
+        } else if (propType === 'array') {
+            // Simple array handling - textarea for JSON
+            formHTML += `<textarea class="form-control" id="${formId}-${propName}" name="${propName}" rows="3" placeholder='Enter JSON array, e.g., ["item1", "item2"]' ${isRequired ? 'required' : ''}></textarea>`;
+        } else if (propType === 'object') {
+            // Object handling - textarea for JSON
+            formHTML += `<textarea class="form-control" id="${formId}-${propName}" name="${propName}" rows="4" placeholder='Enter JSON object, e.g., {"key": "value"}' ${isRequired ? 'required' : ''}></textarea>`;
+        } else {
+            // Default to text input
+            formHTML += `<input type="text" class="form-control" id="${formId}-${propName}" name="${propName}" ${isRequired ? 'required' : ''}>`;
+        }
+        
+        formHTML += '</div>';
+    }
+    
+    formHTML += `<button type="submit" class="btn btn-primary btn-sm">Execute Tool</button>`;
+    formHTML += '</form>';
+    
+    formContainer.innerHTML = formHTML;
+    
+    // Add form submit handler
+    const form = formContainer.querySelector('form');
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await executeTool(serverId, tool.name, form, toolIndex);
+    });
+}
+
+// Execute tool
+async function executeTool(serverId, toolName, form, toolIndex) {
+    const resultContainer = document.getElementById(`tool-result-${serverId}-${toolIndex}`);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    if (!resultContainer) return;
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Executing...';
+    resultContainer.style.display = 'none';
+    
+    try {
+        // Collect form values
+        const formData = new FormData(form);
+        const argumentsObj = {};
+        
+        for (const [key, value] of formData.entries()) {
+            const input = form.querySelector(`[name="${key}"]`);
+            const inputType = input.type;
+            
+            if (inputType === 'checkbox') {
+                argumentsObj[key] = input.checked;
+            } else if (inputType === 'number') {
+                const numValue = parseFloat(value);
+                argumentsObj[key] = isNaN(numValue) ? value : numValue;
+            } else {
+                // Try to parse as JSON for textarea (arrays/objects)
+                if (input.tagName === 'TEXTAREA' && value.trim()) {
+                    try {
+                        argumentsObj[key] = JSON.parse(value);
+                    } catch {
+                        argumentsObj[key] = value;
+                    }
+                } else {
+                    argumentsObj[key] = value || null;
+                }
+            }
+        }
+        
+        // Call API
+        const response = await fetch(`/servers/${serverId}/call-tool`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                tool_name: toolName,
+                arguments: JSON.stringify(argumentsObj)
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Display result
+        resultContainer.style.display = 'block';
+        resultContainer.className = 'tool-result-container mt-2 p-3 border rounded';
+        
+        if (data.success) {
+            resultContainer.classList.add('border-success');
+            resultContainer.classList.remove('border-danger');
+            
+            let resultContent = data.result;
+            if (typeof resultContent === 'object') {
+                resultContent = JSON.stringify(resultContent, null, 2);
+            }
+            
+            resultContainer.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <strong class="text-success">Result:</strong>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="this.parentElement.parentElement.style.display='none'">Close</button>
+                </div>
+                <pre class="mb-0" style="white-space: pre-wrap; word-wrap: break-word;">${escapeHtml(String(resultContent))}</pre>
+            `;
+        } else {
+            resultContainer.classList.add('border-danger');
+            resultContainer.classList.remove('border-success');
+            resultContainer.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <strong class="text-danger">Error:</strong>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="this.parentElement.parentElement.style.display='none'">Close</button>
+                </div>
+                <p class="mb-0 text-danger">${escapeHtml(data.error || 'Unknown error')}</p>
+            `;
+        }
+    } catch (error) {
+        resultContainer.style.display = 'block';
+        resultContainer.className = 'tool-result-container mt-2 p-3 border rounded border-danger';
+        resultContainer.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <strong class="text-danger">Error:</strong>
+                <button class="btn btn-sm btn-outline-secondary" onclick="this.parentElement.parentElement.style.display='none'">Close</button>
+            </div>
+            <p class="mb-0 text-danger">${escapeHtml(error.message)}</p>
+        `;
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Execute Tool';
+    }
+}
+
+// Utility function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

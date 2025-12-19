@@ -1,27 +1,9 @@
-# Python bytecode
-__pycache__/
-*.py[cod]
-*$py.class
-*.pyc
-
-# Environment files
-.env
-.venv
-env/
-venv/
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-
-# IDEs and editors
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# macOS
 .DS_Store
+
+# Python
+__pycache__/
+uv.lock
 
 # Storage files (application data)
 *.txt
