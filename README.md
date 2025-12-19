@@ -73,3 +73,4 @@ The `greeting_mcp_server` implements:
 ## Next Steps
 
 See [greeting_mcp_server/README.md](greeting_mcp_server/README.md) for technical details and API documentation.
+See [dynamic_mcp_client/README.md](dynamic_mcp_client/README.md) for technical details and API documentation.
