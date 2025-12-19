@@ -59,6 +59,8 @@ uv run main.py
 
 Open `http://localhost:3000` in your browser. Click "Add Server", enter the server URL (`http://localhost:8000`), then click "Connect" to complete OAuth authorization. The client automatically handles DCR and PKCE.
 
+Verify that a new client was added in `greeting_mcp_server/oauth_clients.json`
+
 ## What's Included
 
 The `greeting_mcp_server` implements:

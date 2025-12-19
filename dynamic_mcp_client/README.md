@@ -81,6 +81,10 @@ dynamic_mcp_client/
 - Click "Test Connection" to verify and list available tools
 - Client uses Bearer token for authenticated MCP requests
 
+## Testing
+
+Also provided a `uv run test_automated.py` which goes through the whole flow assuming that the user ran `uv run main.py` on the greeting_mcp_server already.
+
 ## Security
 
 - **PKCE (S256)** - Proof Key for Code Exchange prevents authorization code interception
